@@ -26,15 +26,11 @@ Deno.serve(async (req) => {
       // Use payload.record['big-Image'] if present, otherwise use a default big image URL
       const bigImage = payload.record['big-Image'] || "https://images.squarespace-cdn.com/content/v1/5c19da3985ede1c814d97da8/1548844745619-YCOOZIYFMCJENYFBFA21/ITK-Logo.png?format=1500w";
       console.log(`Using big image URL: ${bigImage}`);
-      
-      // Fetch user data based on certain criteria
-      //const user = await fetchUser(payload.record.userId); // Assuming userId is present in payload
 
       // Construct the OneSignal notification body using payload data
       const oneSignalBody = {
         app_id: "b9c41c33-8196-4883-a129-21ce0ce5df41", // Include your app_id
         included_segments: ["Total Subscriptions"],
-        //include_player_ids: ["1799357e-05a6-47f2-bfd6-723b9867bc52"], // Assuming you have user's OneSignal player ID
         contents: {
           en: content, // Use payload content as notification content
           es: content

@@ -173,3 +173,20 @@ form button {
 .greeting-message {
   font-size: 20px; /* Adjust the font size as needed */
 }
+
+/* Add styles for the "Sign Out" button */
+.sign-out-button {
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  margin: 0 200px;
+  cursor: pointer;
+  font-family: 'Poppins';
+  border-radius: 6px; /* Adjust the border-radius if needed */
+}
+
+/* Add hover effect for the "Sign Out" button */
+.sign-out-button:hover {
+  background-color: #0f9d8d;
+}

@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, navigate } from "react";
 import supabase from "../config/supabaseClient"; // Import Supabase client
 import SmoothieCard from "../components/SmoothieCard";
+import OneSignal from 'react-onesignal';
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const [fetchError, setFetchError] = useState(null);
@@ -8,8 +10,48 @@ const Home = () => {
   const [orderBy, setOrderBy] = useState('created_at');
   const [subscribedSmoothies, setSubscribedSmoothies] = useState([]);
   const [followedSmoothies, setFollowedSmoothies] = useState([]);
-  const [followedCompanies, setFollowedCompanies] = useState([]);
   const [user, setUser] = useState(null); // State to store user information
+  const navigate = useNavigate();
+
+  const [isOneSignalReady, setIsOneSignalReady] = useState(false);
+  //const oneSignalInitialized = useRef(false); // useRef to track OneSignal initialization
+
+  /*If you're unsure about the initialization state, you can check if OneSignal 
+  is ready or wait for the OneSignal.on('initialized', () => {}) event if available in your SDK version.*/
+
+ /* 
+*/
+
+
+
+// const oneSignalAppId = "b9c41c33-8196-4883-a129-21ce0ce5df41"
+
+
+
+//   //const [user, setUser] = useState<User | null>(null)
+
+//   const [oneSignalInitialized, setOneSignalInitialized] = useState(false)
+
+//   /**
+//    * Initializes OneSignal SDK for a given Supabase User ID
+//    * @param uid Supabase User ID
+//    */
+//   const initializeOneSignal = async () => {
+//     if (oneSignalInitialized) {
+//       return
+//     }
+//     setOneSignalInitialized(true)
+//     await OneSignal.init({
+//       appId: oneSignalAppId,
+//       notifyButton: {
+//         enable: true,
+//       },
+
+//       allowLocalhostAsSecureOrigin: true,
+//     })
+
+//    // await OneSignal.setExternalUserId(uid)
+//   }
 
   // Fetch user information from Supabase
   useEffect(() => {
@@ -20,7 +62,16 @@ const Home = () => {
           setFetchError("Error fetching user: " + error.message);
         } else {
           setUser(data);
+         // initializeOneSignal(); // Call initializeOneSignal function
           console.log("User Data:", user.user); // Print user data to console
+         try {
+            await supabase
+              .from("User_Smoothies")
+              .update({ logged_in: true })
+              .eq("user_id", user.user.id);
+          } catch (error) {
+            console.error("Error updating logged_in status:", error.message);
+          }
         }
       } catch (error) {
         setFetchError("Error fetching user: " + error.message);
@@ -28,7 +79,7 @@ const Home = () => {
     };
 
     fetchUser();
-  }, []);
+  },[]);
 
   const isSubscribed = (smoothieId) => {
     return subscribedSmoothies.includes(smoothieId);
@@ -61,6 +112,14 @@ useEffect(() => {
 
 const handleSubscribe = async (smoothieId) => {
   try {
+      try {
+        await supabase
+          .from("User_Logged")
+          .update({ logged_in: true })
+          .eq("user_id", user.user.id);
+      } catch (error) {
+        console.error("Error updating logged_in status:", error.message);
+      }
       // Insert a new row into the User_Smoothies table
       const { error } = await supabase
           .from('User_Smoothies')
@@ -69,6 +128,8 @@ const handleSubscribe = async (smoothieId) => {
       if (error) {
           throw error;
       }
+
+      //updateOneSignalTags();
 
       console.log('Subscribed to smoothie:', smoothieId);
       // Ensure no duplicates by using a Set
@@ -110,6 +171,8 @@ const handleUnfollow = async (smoothieId) => {
       if (error) {
           throw error;
       }
+
+     // updateOneSignalTags();
 
       console.log('Unsubscribed from smoothie:', smoothieId);
       // Remove the smoothie ID from the list of subscribed smoothies
@@ -201,6 +264,83 @@ const handleUnfollow = async (smoothieId) => {
 
 
 
+////////// LOG IN ////////////////
+// let logoutClicked = false;
+
+// // Define isLoggedIn function
+// const isLoggedIn = async () => {
+  
+//   // Call isLoggedIn function only if logout button hasn't been clicked
+//   if (user.user) {
+//     try {
+//       // Update logged_in status in the database
+//       await supabase
+//         .from("User_Smoothies")
+//         .update({ logged_in: true })
+//         .eq("user_id", user.user.id);
+//       return true; // Return true if update is successful
+//     } catch (error) {
+//       console.error("Error updating logged_in status:", error.message);
+//       return false; // Return false if update fails
+//     }
+//   }
+// };
+
+// // Call isLoggedIn function
+// isLoggedIn().then((loggedIn) => {
+//   if (user.user){
+//   if (loggedIn) {
+//     console.log("User is logged in.");
+//   } else {
+//     console.log("Error occurred while updating logged_in status.");
+//   }}
+// });
+
+
+
+//////////// SIGN OUT ////////////////////
+const handleSignOut = async () => {
+  //logoutClicked = true;
+   // First, fetch user data
+   const fetchUserData = async () => {
+    try {
+     
+        const { data, error } = await supabase.auth.getUser();
+        if (error) {
+          // Handle error if needed
+        } else {
+          setUser(data);
+          console.log("User Data:", data); // Print user data to console
+          // Update logged_in status in User_Smoothies table
+          try {
+            await supabase
+              .from("User_Logged")
+              .update({ logged_in: false })
+              .eq("user_id", data.user.id);
+          } catch (error) {
+            console.error("Error updating logged_in status:", error.message);
+          }
+        
+      }
+    } catch (error) {
+      // Handle error if needed
+    }
+  };
+
+  await fetchUserData(); // Call fetchUserData on component mount 
+  
+ 
+  const { error } = await supabase.auth.signOut();
+
+  if (!error) {
+    navigate("/login"); // Redirect after successful sign out
+  } else {
+    console.error('Sign out error:', error.message);
+  }
+}; 
+
+
+
    // Display greeting message with user's email
    const greeting = user ? `Hi, ${user.user.email}` : "Hi, you've logged out";
 
@@ -208,6 +348,7 @@ const handleUnfollow = async (smoothieId) => {
     <div className="page home">
       <h2 className="greeting-message">
         {user ? `Hi, ${user.user.email}` : "Hi, you've logged out"}
+        {<button className="sign-out-button" onClick={handleSignOut}>Sign Out</button>}
       </h2>
       {fetchError && (<p>{fetchError}</p>)}
       {smoothies && (
@@ -247,3 +388,27 @@ const handleUnfollow = async (smoothieId) => {
 };
 
 export default Home;
+
+
+/*
+import type {NextPage} from "next";
+import Head from "next/head";
+import React from "react";
+import OneSignal from "../components/OneSignal";
+import styles from "../styles/Home.module.css";
+
+const Home: NextPage = () => {
+  const buttonClicked = async () => {
+    const {OneSignal} = window;
+    const tags = await OneSignal.getTags();
+    const {clicks} = tags;
+
+    console.log("Tags", tags);
+    const updatedClicks = clicks ? parseInt(clicks, 10) + 1 : 1;
+    const tagSent = await OneSignal.sendTags({
+      ...tags,
+      clicks: updatedClicks,
+    });
+    console.log("New tags", tagSent);
+  }
+} */

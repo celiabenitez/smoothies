@@ -11,7 +11,7 @@ export default async function handler(req, res) {
       let title, content;
       if (event === 'INSERT') {
         title = 'New update!';
-        content = 'New smoothie added: ' + newSmoothie.name;
+        content = 'New smoothie: ' + newSmoothie.name;
       } else if (event === 'UPDATE') {
         title = 'New update!';
         content = 'Smoothie updated: ' + newSmoothie.name;
