@@ -3,7 +3,7 @@ import supabase from "../config/supabaseClient"; // Import Supabase client
 import SmoothieCard from "../components/SmoothieCard";
 import OneSignal from 'react-onesignal';
 import { useNavigate } from "react-router-dom";
-
+import runOneSignal from './onesignal';
 const Home = () => {
   const [fetchError, setFetchError] = useState(null);
   const [smoothies, setSmoothies] = useState(null);
@@ -12,8 +12,11 @@ const Home = () => {
   const [followedSmoothies, setFollowedSmoothies] = useState([]);
   const [user, setUser] = useState(null); // State to store user information
   const navigate = useNavigate();
-
-  const [isOneSignalReady, setIsOneSignalReady] = useState(false);
+  useEffect(() => {
+    runOneSignal();
+  })
+  //const [isOneSignalReady, setIsOneSignalReady] = useState(false);
+  
   //const oneSignalInitialized = useRef(false); // useRef to track OneSignal initialization
 
   /*If you're unsure about the initialization state, you can check if OneSignal 
